@@ -1,0 +1,49 @@
+echo "nameserver 8.8.8.8" > /etc/resolv.conf
+
+ip a add 10.0.0.4/8 dev eth0
+ip a add 172.23.199.254/23 dev eth1
+ip link set dev eth0 up
+ip link set dev eth1 up
+ip route add default via 10.0.0.1
+
+apt update
+echo "Y" | apt install isc-dhcp-server
+
+#/etc/network/interfaces
+echo 'auto lo
+iface lo inet loopback
+
+auto eth0
+iface eth0 inet static
+address 10.0.0.4
+netmask 255.0.0.0
+gateway 10.0.0.1
+
+auto eth1
+iface eth1 inet dhcp' > /etc/network/interfaces
+
+#isc-dhcp-server
+echo 'DHCPDv4_PID=/var/run/dhcpd.pid
+INTERFACESv4="eth1"
+INTERFACESv6=""' > /etc/default/isc-dhcp-server
+
+
+#dhcpd.conf
+echo 'ddns-update-style none;
+
+subnet 172.23.198.0 netmask 255.255.254.0 {
+  range 172.23.198.1 172.23.199.253;
+  option domain-name-servers 8.8.8.8;
+  option domain-name "www.google.fr";
+  option routers 172.23.199.254;
+  default-lease-time 600;
+  max-lease-time 7200;
+}
+host rc {
+hardware ethernet AA:BB:CC:DD:EE:FF;
+fixed-address 172.23.199.254;
+}
+' > /etc/dhcp/dhcpd.conf
+
+#Lancement
+service isc-dhcp-server start

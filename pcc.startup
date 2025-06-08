@@ -1,0 +1,6 @@
+dhclient eth0
+echo "nameserver 8.8.8.8" > /etc/resolv.conf
+
+apt update
+apt install -y ftp
+apt install -y openssh-client
